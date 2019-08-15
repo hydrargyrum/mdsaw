@@ -3,6 +3,7 @@
 import argparse
 import pathlib
 import re
+import sys
 
 
 def to_filename(name):
@@ -19,7 +20,7 @@ def decompose(filepath, dirpath):
 
 	for fn, subtext in matches:
 		fn = to_filename(fn)
-		print('writing', fn)
+		print('writing', fn, file=sys.stderr)
 		subfilepath = dirpath.joinpath(fn)
 		subfilepath.write_text(subtext)
 
@@ -27,9 +28,9 @@ def decompose(filepath, dirpath):
 def compose(filepath, dirpath):
 	buf = []
 	for subfilepath in sorted(dirpath.glob('*.txt')):
-		print('reading', subfilepath)
 		buf.append('---- %s\n' % subfilepath.name)
 		buf.append(subfilepath.read_text())
+		print('reading', subfilepath, file=sys.stderr)
 
 	if buf:  # don't empty the file
 		filepath.write_text(''.join(buf))
