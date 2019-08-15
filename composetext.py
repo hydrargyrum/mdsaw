@@ -83,24 +83,25 @@ from that section up to the next title.
 
 	cmp = parser.add_mutually_exclusive_group(required=True)
 	cmp.add_argument(
-		'-c', '--compose', action='store_true',
+		'-c', '--compose', '--merge', action='store_true',
 		help='Compose multiple text files into a single file',
 	)
 	cmp.add_argument(
-		'-d', '--decompose', action='store_true',
+		'-d', '--decompose', '--split', action='store_true',
 		help='Decompose a text file with separators into multiple files',
 	)
 
 	parser.add_argument(
-		'filepath', type=pathlib.Path,
-		help='Output file if composing dirpath to filepath, else the '
-		'input file if decomposing filepath to dirpath',
+		'inpath', type=pathlib.Path,
+		help='Input path, must be an existing directory path to the '
+		'files to merge if in composing mode or an existing file path'
+		' in decomposing mode',
 	)
 	parser.add_argument(
-		'dirpath', type=pathlib.Path,
-		help='Input directory where to read files if composing dirpath'
-		' to filepath, else the output directory if decomposing'
-		' filepath to dirpath',
+		'outpath', type=pathlib.Path,
+		help='Output path, must be a file path where to write the '
+		'merged file when composing or an existing directory path '
+		'where the resulting files will be written when decomposing',
 	)
 	return parser
 
@@ -109,17 +110,22 @@ def main():
 	parser = build_parser()
 	args = parser.parse_args()
 
-	if not args.dirpath.is_dir():
-		parser.error('%r is not a directory' % str(args.dirpath))
-
 	if args.compose:
-		if args.filepath.exists() and not args.filepath.is_file():
-			parser.error('%r is not a file' % str(args.filepath))
-		compose(args.filepath, args.dirpath)
+		if not args.inpath.is_dir():
+			parser.error(f'{str(args.inpath)!r} is not a directory')
+
+		if args.outpath.exists() and not args.outpath.is_file():
+			parser.error(f'{str(args.outpath)!r} is not a file')
+
+		compose(args.outpath, args.inpath)
 	elif args.decompose:
-		if not args.filepath.is_file():
-			parser.error('%r is not a file' % str(args.filepath))
-		decompose(args.filepath, args.dirpath)
+		if not args.inpath.is_file():
+			parser.error('{str(args.inpath)!r} is not a file')
+
+		if not args.outpath.is_dir():
+			parser.error(f'{str(args.outpath)!r} is not a directory')
+
+		decompose(args.inpath, args.outpath)
 	else:
 		assert False
 
