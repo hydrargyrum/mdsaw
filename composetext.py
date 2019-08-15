@@ -36,11 +36,29 @@ def compose(filepath, dirpath):
 
 
 def build_parser():
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(
+		description='''
+Compose/decompose text files with multiple sections
+
+If a text file has line separators like
+
+	---- the title
+
+It can be decomposed in multiple text files split at separators. For example,
+the-title.txt will contain the text from the title up to the next separator.
+'''.strip(),
+		formatter_class=argparse.RawDescriptionHelpFormatter,
+	)
 
 	cmp = parser.add_mutually_exclusive_group(required=True)
-	cmp.add_argument('-c', '--compose', action='store_true')
-	cmp.add_argument('-d', '--decompose', action='store_true')
+	cmp.add_argument(
+		'-c', '--compose', action='store_true',
+		help='Compose multiple text files into a single file',
+	)
+	cmp.add_argument(
+		'-d', '--decompose', action='store_true',
+		help='Decompose a text file with separators into multiple files',
+	)
 
 	parser.add_argument('filepath', type=pathlib.Path)
 	parser.add_argument('dirpath', type=pathlib.Path)
