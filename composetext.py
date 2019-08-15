@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# public domain: see LICENSE file
 
 import argparse
 import pathlib
