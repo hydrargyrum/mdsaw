@@ -16,10 +16,18 @@ def to_filename(name):
 
 def decompose(filepath, dirpath):
 	text = filepath.read_text()
-	matches = re.findall(r'---- ([^\n]*)\n(.+?)(?:(?=---- )|\Z)', text, re.UNICODE | re.DOTALL)  # $ will elide the last newline
+	matches = re.findall(
+		r'(?:----|#) ([^\n]+)\n'
+		r'(.+?)'
+		r'(?:(?=^----|^#)|\Z)',
+		text, flags=re.UNICODE | re.DOTALL | re.MULTILINE
+	)
 
-	for fn, subtext in matches:
-		fn = to_filename(fn)
+	for title, subtext in matches:
+		subtext = subtext.strip()
+		subtext = f'# {title}\n\n{subtext}\n'
+
+		fn = to_filename(title)
 		print('writing', fn, file=sys.stderr)
 		subfilepath = dirpath.joinpath(fn)
 		subfilepath.write_text(subtext)
@@ -28,12 +36,25 @@ def decompose(filepath, dirpath):
 def compose(filepath, dirpath):
 	buf = []
 	for subfilepath in sorted(dirpath.glob('*.txt')):
-		buf.append('---- %s\n' % subfilepath.name)
-		buf.append(subfilepath.read_text())
 		print('reading', subfilepath, file=sys.stderr)
+		subtext = subfilepath.read_text()
+		if subtext.startswith('# '):
+			title, _, subtext = subtext.partition('\n')
+			title = title[1:].strip()  # remove "#"
+		else:
+			title = subfilepath.name
+		subtext = subtext.strip()
+
+		buf.append(f'# {title}\n\n')
+		buf.append(subtext)
+		buf.append('\n\n')
 
 	if buf:  # don't empty the file
-		filepath.write_text(''.join(buf))
+		text = ''.join(buf)
+		if filepath == pathlib.Path('-'):
+			print(text)
+		else:
+			filepath.write_text(text)
 
 
 def build_parser():
