@@ -60,14 +60,23 @@ def compose(filepath, dirpath):
 def build_parser():
 	parser = argparse.ArgumentParser(
 		description='''
-Compose/decompose text files with multiple sections
+Compose/decompose text files with multiple markdown sections
 
-If a text file has line separators like
+Composition
+-----------
 
-	---- the title
+Multiple text files from the input directory will be merged into a singe big
+output text file, with markdown sections for each of the original separate
+files, and titles to split them ("# name of the file").
 
-It can be decomposed in multiple text files split at separators. For example,
-the-title.txt will contain the text from the title up to the next separator.
+Decomposition
+-------------
+
+Conversely, if an input text file has markdown titles (for example lines like
+"# the title"), it can be decomposed in multiple text files in the output
+directory, each corresponding to one of the sections.
+For example, one of the files could be "the-title.txt" and contain the text
+from that section up to the next title.
 '''.strip(),
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 	)
@@ -82,8 +91,17 @@ the-title.txt will contain the text from the title up to the next separator.
 		help='Decompose a text file with separators into multiple files',
 	)
 
-	parser.add_argument('filepath', type=pathlib.Path)
-	parser.add_argument('dirpath', type=pathlib.Path)
+	parser.add_argument(
+		'filepath', type=pathlib.Path,
+		help='Output file if composing dirpath to filepath, else the '
+		'input file if decomposing filepath to dirpath',
+	)
+	parser.add_argument(
+		'dirpath', type=pathlib.Path,
+		help='Input directory where to read files if composing dirpath'
+		' to filepath, else the output directory if decomposing'
+		' filepath to dirpath',
+	)
 	return parser
 
 
