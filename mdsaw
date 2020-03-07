@@ -34,9 +34,9 @@ def decompose(filepath, dirpath):
 		subfilepath.write_text(subtext)
 
 
-def compose(filepath, dirpath):
+def compose(filepath, infiles):
 	buf = []
-	for subfilepath in sorted(dirpath.glob('*.txt')):
+	for subfilepath in infiles:
 		print('reading', subfilepath, file=sys.stderr)
 		subtext = subfilepath.read_text()
 		if subtext.startswith('# '):
@@ -69,12 +69,13 @@ Composition
 Multiple text files from the input directory will be merged into a singe big
 output text file, with markdown sections for each of the original separate
 files, and titles to split them ("# name of the file").
+Alternatively, a list of files to merge can be passed instead of a directory.
 
 Decomposition
 -------------
 
-Conversely, if an input text file has markdown titles (for example lines like
-"# the title"), it can be decomposed in multiple text files in the output
+Conversely, if an input text file has markdown headings (for example lines
+like "# the title"), it can be decomposed in multiple text files in the output
 directory, each corresponding to one of the sections.
 For example, one of the files could be "the-title.txt" and contain the text
 from that section up to the next title.
@@ -93,16 +94,19 @@ from that section up to the next title.
 	)
 
 	parser.add_argument(
-		'inpath', type=pathlib.Path,
-		help='Input path, must be an existing directory path to the '
-		'files to merge if in composing mode or an existing file path'
-		' in decomposing mode',
+		'inpaths', type=pathlib.Path,
+		nargs='+',
+		help='Input paths. If in composing mode must be an existing '
+		'directory path to the files to merge or a list of files '
+		'to merge. If in decomposing mode, must be the file path to '
+		'decompose.',
 	)
 	parser.add_argument(
 		'outpath', type=pathlib.Path,
-		help='Output path, must be a file path where to write the '
-		'merged file when composing or an existing directory path '
-		'where the resulting files will be written when decomposing',
+		help='Output path. When composing, must be a file path where '
+		'to write the merged file. When decomposing, must be an '
+		'existing directory path where the resulting files will '
+		'be written.',
 	)
 	return parser
 
@@ -112,16 +116,21 @@ def main():
 	args = parser.parse_args()
 
 	if args.compose:
-		if not args.inpath.is_dir():
-			parser.error(f'{str(args.inpath)!r} is not a directory')
-
 		if args.outpath.exists() and not args.outpath.is_file():
 			parser.error(f'{str(args.outpath)!r} is not a file')
 
-		compose(args.outpath, args.inpath)
+		if len(args.inpaths) == 1 and args.inpaths[0].is_dir():
+			infiles = sorted(args.inpaths[0].glob('*.txt'))
+		elif all(inpath.is_file() for inpath in args.inpaths):
+			infiles = args.inpaths
+
+		compose(args.outpath, infiles)
 	elif args.decompose:
+		if len(args.inpaths) > 1:
+			parser.error('only one input file must be given')
+		args.inpath = args.inpaths[0]
 		if not args.inpath.is_file():
-			parser.error('{str(args.inpath)!r} is not a file')
+			parser.error(f'{str(args.inpath)!r} is not a file')
 
 		if not args.outpath.is_dir():
 			parser.error(f'{str(args.outpath)!r} is not a directory')
