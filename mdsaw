@@ -7,15 +7,15 @@ import re
 import sys
 
 
-def to_filename(name):
+def to_filename(name, extension):
 	name = name.replace('.txt', '')
 	name = name.lower()
 	name = re.sub(r'[\W.]+', '-', name)
-	name += '.txt'
+	name += f'.{extension}'
 	return name
 
 
-def decompose(filepath, dirpath):
+def decompose(filepath, dirpath, extension='md'):
 	text = filepath.read_text()
 	matches = re.findall(
 		r'(?:----|#) ([^\n]+)\n'
@@ -28,7 +28,7 @@ def decompose(filepath, dirpath):
 		subtext = subtext.strip()
 		subtext = f'# {title}\n\n{subtext}\n'
 
-		fn = to_filename(title)
+		fn = to_filename(title, extension)
 		print('writing', fn, file=sys.stderr)
 		subfilepath = dirpath.joinpath(fn)
 		subfilepath.write_text(subtext)
@@ -77,7 +77,7 @@ Decomposition
 Conversely, if an input text file has markdown headings (for example lines
 like "# the title"), it can be decomposed in multiple text files in the output
 directory, each corresponding to one of the sections.
-For example, one of the files could be "the-title.txt" and contain the text
+For example, one of the files could be "the-title.md" and contain the text
 from that section up to the next title.
 '''.strip(),
 		formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -93,6 +93,11 @@ from that section up to the next title.
 		help='Decompose a text file with separators into multiple files',
 	)
 
+	parser.add_argument(
+		'--extension',
+		default='md',
+		help='Output file extension when decomposing a file',
+	)
 	parser.add_argument(
 		'inpaths', type=pathlib.Path,
 		nargs='+',
@@ -120,7 +125,7 @@ def main():
 			parser.error(f'{str(args.outpath)!r} is not a file')
 
 		if len(args.inpaths) == 1 and args.inpaths[0].is_dir():
-			infiles = sorted(args.inpaths[0].glob('*.txt'))
+			infiles = sorted(args.inpaths[0].glob(f'*.{args.extension}'))
 		elif all(inpath.is_file() for inpath in args.inpaths):
 			infiles = args.inpaths
 
@@ -135,7 +140,7 @@ def main():
 		if not args.outpath.is_dir():
 			parser.error(f'{str(args.outpath)!r} is not a directory')
 
-		decompose(args.inpath, args.outpath)
+		decompose(args.inpath, args.outpath, extension=args.extension)
 	else:
 		assert False
 
