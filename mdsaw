@@ -25,8 +25,8 @@ def decompose(filepath, dirpath, extension='md'):
 	)
 
 	for title, subtext in matches:
-		subtext = subtext.strip()
-		subtext = f'# {title}\n\n{subtext}\n'
+		subtext = subtext.rstrip()
+		subtext = f'# {title}\n{subtext}\n'
 
 		fn = to_filename(title, extension)
 		print('writing', fn, file=sys.stderr)
@@ -44,14 +44,12 @@ def compose(filepath, infiles):
 			title = title[1:].strip()  # remove "#"
 		else:
 			title = subfilepath.name
-		subtext = subtext.strip()
+		subtext = subtext.rstrip()
 
-		buf.append(f'# {title}\n\n')
-		buf.append(subtext)
-		buf.append('\n\n')
+		buf.append(f'# {title}\n{subtext}\n')
 
 	if buf:  # don't empty the file
-		text = ''.join(buf)
+		text = '\n'.join(buf)
 		if filepath == pathlib.Path('-'):
 			print(text)
 		else:
