@@ -1,4 +1,4 @@
-#!/usr/bin/env pytest
+#!/usr/bin/env -S python3 -m pytest
 
 from subprocess import check_call, CalledProcessError
 from tempfile import mkdtemp
@@ -18,7 +18,6 @@ def outdir():
 
 
 def run_compose(*args):
-	print([mdpath, '-c', *args])
 	check_call([mdpath, '-c', *args])
 
 
