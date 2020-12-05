@@ -77,6 +77,41 @@ def test_decompose(indir, outdir):
 	})
 
 
+def test_decompose_subtitles(indir, outdir):
+	create_dir_content(indir, {
+		'1.md': literal('''
+			# bar
+			b 1
+			## sub
+			b 2
+
+			# foo
+			f 1
+
+			### subsub
+			f 2
+		'''),
+	})
+
+	run_decompose(indir / '1.md', outdir)
+
+	check_dir_contains(outdir, {
+		'bar.md': literal('''
+			# bar
+			b 1
+			## sub
+			b 2
+		'''),
+		'foo.md': literal('''
+			# foo
+			f 1
+
+			### subsub
+			f 2
+		'''),
+	})
+
+
 def test_decompose_error_dirs(indir, outdir):
 	with pytest.raises(CalledProcessError):
 		run_decompose(indir, outdir)
