@@ -2,19 +2,28 @@
 
 from subprocess import check_call, CalledProcessError
 from tempfile import mkdtemp
+from textwrap import dedent
 from pathlib import Path
 
 import pytest
 
 
-@pytest.fixture
-def indir():
-	return Path(mkdtemp())
+def literal(text):
+	return dedent(text).lstrip()
 
 
 @pytest.fixture
-def outdir():
-	return Path(mkdtemp())
+def indir(tmp_path):
+	ret = tmp_path / 'in'
+	ret.mkdir()
+	return ret
+
+
+@pytest.fixture
+def outdir(tmp_path):
+	ret = tmp_path / 'out'
+	ret.mkdir()
+	return ret
 
 
 def run_compose(*args):
@@ -41,12 +50,30 @@ def check_dir_contains(path, datadict):
 
 def test_decompose(indir, outdir):
 	create_dir_content(indir, {
-		'1.md': '# bar\nb 1\nb 2\n\n# foo\nf 1\nf 2\n',
+		'1.md': literal('''
+			# bar
+			b 1
+			b 2
+
+			# foo
+			f 1
+			f 2
+		'''),
 	})
+
 	run_decompose(indir / '1.md', outdir)
+
 	check_dir_contains(outdir, {
-		'bar.md': '# bar\nb 1\nb 2\n',
-		'foo.md': '# foo\nf 1\nf 2\n',
+		'bar.md': literal('''
+			# bar
+			b 1
+			b 2
+		'''),
+		'foo.md': literal('''
+			# foo
+			f 1
+			f 2
+		'''),
 	})
 
 
@@ -57,20 +84,56 @@ def test_decompose_error_dirs(indir, outdir):
 
 def test_compose(indir, outdir):
 	create_dir_content(indir, {
-		'bar.md': '# bar\nb 1\nb 2\n',
-		'foo.md': '# foo\nf 1\nf 2\n',
+		'bar.md': literal('''
+			# bar
+			b 1
+			b 2
+		'''),
+		'foo.md': literal('''
+			# foo
+			f 1
+			f 2
+		'''),
 	})
+
 	run_compose(indir, outdir / 'test.md')
-	check_file_contains(outdir / 'test.md', '# bar\nb 1\nb 2\n\n# foo\nf 1\nf 2\n')
+
+	check_file_contains(outdir / 'test.md', literal('''
+		# bar
+		b 1
+		b 2
+
+		# foo
+		f 1
+		f 2
+	'''))
 
 
 def test_compose_selected(indir, outdir):
 	create_dir_content(indir, {
-		'bar.md': '# bar\nb 1\nb 2\n',
-		'foo.md': '# foo\nf 1\nf 2\n',
+		'bar.md': literal('''
+			# bar
+			b 1
+			b 2
+		'''),
+		'foo.md': literal('''
+			# foo
+			f 1
+			f 2
+		'''),
 	})
+
 	run_compose(indir / 'foo.md', indir / 'bar.md', outdir / 'test.md')
-	check_file_contains(outdir / 'test.md', '# foo\nf 1\nf 2\n\n# bar\nb 1\nb 2\n')
+
+	check_file_contains(outdir / 'test.md', literal('''
+		# foo
+		f 1
+		f 2
+
+		# bar
+		b 1
+		b 2
+	'''))
 
 
 def test_compose_error_mixpaths(indir, outdir):
