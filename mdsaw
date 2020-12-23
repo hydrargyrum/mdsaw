@@ -17,10 +17,11 @@ def to_filename(name, extension):
 
 def decompose(filepath, dirpath, extension='md'):
 	text = filepath.read_text()
+
 	matches = re.findall(
 		r'^# ([^\n]+)\n'
-		r'(.+?)'
-		r'(?:\n(?=# )|\Z)',
+		r'(.*?)'
+		r'(?:(?<=\n)(?=# )|\Z)',
 		text, flags=re.UNICODE | re.DOTALL | re.MULTILINE
 	)
 

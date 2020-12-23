@@ -77,6 +77,45 @@ def test_decompose(indir, outdir):
 	})
 
 
+def test_decompose_empty(indir, outdir):
+	create_dir_content(indir, {
+		'1.md': literal('''
+			# bar
+
+			# foo
+			f 1
+			f 2
+			# qux
+			# quack
+			f 1
+			f 2
+		'''),
+	})
+
+	run_decompose(indir / '1.md', outdir)
+
+	check_dir_contains(outdir, {
+		'bar.md': literal('''
+			# bar
+
+		'''),
+		'qux.md': literal('''
+			# qux
+
+		'''),
+		'foo.md': literal('''
+			# foo
+			f 1
+			f 2
+		'''),
+		'quack.md': literal('''
+			# quack
+			f 1
+			f 2
+		'''),
+	})
+
+
 def test_decompose_subtitles(indir, outdir):
 	create_dir_content(indir, {
 		'1.md': literal('''
