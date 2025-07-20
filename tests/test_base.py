@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python3 -m pytest
+#!/usr/bin/env pytest
 
 from subprocess import check_call, CalledProcessError
 from tempfile import mkdtemp
@@ -218,4 +218,4 @@ def test_compose_error_mixpaths(indir, outdir):
 		run_compose(indir / 'foo.md', indir, outdir / 'test.md')
 
 
-mdpath = Path(__file__).with_name('mdsaw')
+mdpath = Path(__file__).parent.with_name('mdsaw')
